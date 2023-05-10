@@ -16,7 +16,6 @@ Get printing data from a cups printing server
 
 
 
-
 ## Changelog
 <!--
 	Placeholder for the next version (at the beginning of the line):
