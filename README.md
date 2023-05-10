@@ -1,4 +1,4 @@
-![Logo](admin/cups.svg)
+![Logo](admin/cups.png)
 # ioBroker.cups
 
 [![NPM version](https://img.shields.io/npm/v/iobroker.cups.svg)](https://www.npmjs.com/package/iobroker.cups)
