@@ -1,0 +1,110 @@
+{
+	"common": {
+		"name": "cups",
+		"version": "0.0.1",
+		"news": {
+			"0.0.1": {
+				"en": "initial release",
+				"de": "Erstveröffentlichung",
+				"ru": "Начальная версия",
+				"pt": "lançamento inicial",
+				"nl": "Eerste uitgave",
+				"fr": "Première version",
+				"it": "Versione iniziale",
+				"es": "Versión inicial",
+				"pl": "Pierwsze wydanie",
+				"zh-cn": "首次出版"
+			}
+		},
+		"title": "Cups",
+		"titleLang": {
+			"en": "Cups",
+			"de": "Cups",
+			"ru": "Cups",
+			"pt": "Cups",
+			"nl": "Cups",
+			"fr": "Cups",
+			"it": "Cups",
+			"es": "Cups",
+			"pl": "Cups",
+			"zh-cn": "Cups"
+		},
+		"desc": {
+			"en": "Get printing data from a cups printing server",
+			"de": "Get printing data from a cups printing server",
+			"ru": "Get printing data from a cups printing server",
+			"pt": "Get printing data from a cups printing server",
+			"nl": "Get printing data from a cups printing server",
+			"fr": "Get printing data from a cups printing server",
+			"it": "Get printing data from a cups printing server",
+			"es": "Get printing data from a cups printing server",
+			"pl": "Get printing data from a cups printing server",
+			"zh-cn": "Get printing data from a cups printing server"
+		},
+		"authors": [
+			"Felix <felixcrafter54@gmail.com>"
+		],
+		"keywords": [
+			"cups",
+			"printer",
+			"printer server",
+			"printing server",
+			"network"
+		],
+		"license": "MIT",
+		"platform": "Javascript/Node.js",
+		"main": "main.js",
+		"icon": "cups.svg",
+		"enabled": true,
+		"extIcon": "https://raw.githubusercontent.com/felixcrafter54/ioBroker.cups/main/admin/cups.svg",
+		"readme": "https://github.com/felixcrafter54/ioBroker.cups/blob/main/README.md",
+		"loglevel": "info",
+		"mode": "daemon",
+		"type": "infrastructure",
+		"compact": true,
+		"connectionType": "local",
+		"dataSource": "poll",
+		"adminUI": {
+			"config": "json"
+		},
+		"dependencies": [
+			{
+				"js-controller": ">=3.3.22"
+			}
+		],
+		"globalDependencies": [
+			{
+				"admin": ">=5.1.13"
+			}
+		]
+	},
+	"native": {
+		"server": "localhost",
+		"port": "631",
+		"interval": "60"
+	},
+	"objects": [],
+	"instanceObjects": [
+		{
+			"_id": "info",
+			"type": "channel",
+			"common": {
+				"name": "Information"
+			},
+			"native": {}
+		},
+		{
+			"_id": "info.connection",
+			"type": "state",
+			"common": {
+				"role": "indicator.connected",
+				"name": "Device or service connected",
+				"type": "boolean",
+				"read": true,
+				"write": false,
+				"def": false
+			},
+			"native": {}
+		}
+	]
+}
