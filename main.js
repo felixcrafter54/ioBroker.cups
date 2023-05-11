@@ -12,6 +12,28 @@ const ipp = require('@sealsystems/ipp');
 // Load your modules here, e.g.:
 // const fs = require("fs");
 
+
+function getCupsPrintersStatus(uri) {
+	return new Promise((resolve, reject) => {
+		const data = ipp.serialize({
+			operation: 'CUPS-Get-Printers',
+			'operation-attributes-tag': {
+				'attributes-charset': 'utf-8',
+				'attributes-natural-language': 'en',
+				//'requested-attributes': ['printer-name','printer-more-info','printer-make-and-model','printer-info','printer-state-message','printer-state']
+			}
+		});
+
+		ipp.request(uri, data, (err, res) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(res);
+			}
+		});
+	});
+}
+
 class Cups extends utils.Adapter {
 
 	/**
@@ -34,25 +56,17 @@ class Cups extends utils.Adapter {
 	 */
 	async onReady() {
 
-		const uri = 'ipp://${this.config.ServerIp}:${this.config.ServerIp}';
-		const data = ipp.serialize({
-			operation: 'CUPS-Get-Printers',
-			'operation-attributes-tag': {
-				'attributes-charset': 'utf-8',
-				'attributes-natural-language': 'en',
-				'requested-attributes': ['printer-name','printer-more-info','printer-make-and-model','printer-info','printer-state-message','printer-state']
-			}
-		});
+		const uri = 'http://${this.config.serverIp}:${this.config.port}/';
 
-		const ServerResponse = await ipp.request(uri, data, function(err, res) {
-			if (err) {
-				return err;
-			}
-			//const output = JSON.stringify(res, null, 2);
-			return res.statusCode;
-		});
+		this.log.info('uri: ' + uri);
 
-		await this.setStateAsync('serverInfo.statusCode',{val: , ack: true});
+		try {
+			const output = await getCupsPrintersStatus(uri);
+			await this.setStateAsync('serverInfo.statusCode', { val: output.statusCode, ack: true });
+			await this.setStateAsync('serverInfo.version', { val: output.version, ack: true });
+		} catch (error) {
+			this.log.error(error);
+		}
 
 
 		// Initialize your adapter here
@@ -61,7 +75,7 @@ class Cups extends utils.Adapter {
 
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
 		// this.config:
-		this.log.info('config server: ' + this.config.server);
+		this.log.info('config server: ' + this.config.serverIp);
 		this.log.info('config port: ' + this.config.port);
 		this.log.info('config interval: ' + this.config.interval);
 
@@ -94,11 +108,11 @@ class Cups extends utils.Adapter {
 			you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
 		*/
 		// the variable testVariable is set to true as command (ack=false)
-		await this.setStateAsync('testVariable', true);
+		//await this.setStateAsync('testVariable', false);
 
 		// same thing, but the value is flagged "ack"
 		// ack should be always set to true if the value is received from or acknowledged from the target system
-		await this.setStateAsync('testVariable', { val: true, ack: true });
+		//await this.setStateAsync('testVariable', { val: true, ack: true });
 
 		// same thing, but the state is deleted after 30s (getState will return null afterwards)
 		//await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });

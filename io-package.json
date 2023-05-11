@@ -127,6 +127,20 @@
 			"native": {}
 
 
+		},
+		{
+			"_id": "serverInfo.version",
+			"type": "state",
+			"common": {
+				"role": "text",
+				"name": "version",
+				"type": "string",
+				"read": true,
+				"write": false
+			},
+			"native": {}
+
+
 		}
 	]
 }
