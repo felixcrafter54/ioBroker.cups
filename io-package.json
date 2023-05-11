@@ -79,9 +79,9 @@
 		]
 	},
 	"native": {
-		"server": "localhost",
-		"port": "631",
-		"interval": "60"
+		"serverIp": "localhost",
+		"port": 631,
+		"interval": 60
 	},
 	"objects": [],
 	"instanceObjects": [
@@ -105,6 +105,28 @@
 				"def": false
 			},
 			"native": {}
+		},
+		{
+			"_id": "serverInfo",
+			"type": "channel",
+			"common": {
+				"name": "Server Information"
+			},
+			"native": {}
+		},
+		{
+			"_id": "serverInfo.statusCode",
+			"type": "state",
+			"common": {
+				"role": "text",
+				"name": "statusCode",
+				"type": "string",
+				"read": true,
+				"write": false
+			},
+			"native": {}
+
+
 		}
 	]
 }

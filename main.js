@@ -7,6 +7,7 @@
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
+const ipp = require('@sealsystems/ipp');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
@@ -32,8 +33,29 @@ class Cups extends utils.Adapter {
 	 * Is called when databases are connected and adapter received configuration.
 	 */
 	async onReady() {
-		// Initialize your adapter here
 
+		const uri = 'ipp://${this.config.ServerIp}:${this.config.ServerIp}';
+		const data = ipp.serialize({
+			operation: 'CUPS-Get-Printers',
+			'operation-attributes-tag': {
+				'attributes-charset': 'utf-8',
+				'attributes-natural-language': 'en',
+				'requested-attributes': ['printer-name','printer-more-info','printer-make-and-model','printer-info','printer-state-message','printer-state']
+			}
+		});
+
+		const ServerResponse = await ipp.request(uri, data, function(err, res) {
+			if (err) {
+				return err;
+			}
+			//const output = JSON.stringify(res, null, 2);
+			return res.statusCode;
+		});
+
+		await this.setStateAsync('serverInfo.statusCode',{val: , ack: true});
+
+
+		// Initialize your adapter here
 		// Reset the connection indicator during startup
 		this.setState('info.connection', false, true);
 
@@ -79,7 +101,7 @@ class Cups extends utils.Adapter {
 		await this.setStateAsync('testVariable', { val: true, ack: true });
 
 		// same thing, but the state is deleted after 30s (getState will return null afterwards)
-		await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
+		//await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
 
 		// examples for the checkPassword/checkGroup functions
 		let result = await this.checkPasswordAsync('admin', 'iobroker');

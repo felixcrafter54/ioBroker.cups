@@ -23,7 +23,8 @@
     "node": ">= 14"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^2.6.8"
+    "@iobroker/adapter-core": "^2.6.8",
+    "@sealsystems/ipp": "2.8.0"
   },
   "devDependencies": {
     "@alcalzone/release-script": "^3.5.9",
