@@ -8,7 +8,6 @@
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
 const ipp = require('@sealsystems/ipp');
-const { promises } = require('fs');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
