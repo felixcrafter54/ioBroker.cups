@@ -8,31 +8,13 @@
 // you need to create an adapter
 const utils = require('@iobroker/adapter-core');
 const ipp = require('@sealsystems/ipp');
+const { promises } = require('fs');
 
 // Load your modules here, e.g.:
 // const fs = require("fs");
 
 
-function getCupsPrintersStatus(uri) {
-	return new Promise((resolve, reject) => {
-		const data = ipp.serialize({
-			operation: 'CUPS-Get-Printers',
-			'operation-attributes-tag': {
-				'attributes-charset': 'utf-8',
-				'attributes-natural-language': 'en',
-				//'requested-attributes': ['printer-name','printer-more-info','printer-make-and-model','printer-info','printer-state-message','printer-state']
-			}
-		});
 
-		ipp.request(uri, data, (err, res) => {
-			if (err) {
-				reject(err);
-			} else {
-				resolve(res);
-			}
-		});
-	});
-}
 
 class Cups extends utils.Adapter {
 
@@ -56,28 +38,41 @@ class Cups extends utils.Adapter {
 	 */
 	async onReady() {
 
-		const uri = 'http://${this.config.serverIp}:${this.config.port}/';
-
-		this.log.info('uri: ' + uri);
-
-		try {
-			const output = await getCupsPrintersStatus(uri);
-			await this.setStateAsync('serverInfo.statusCode', { val: output.statusCode, ack: true });
-			await this.setStateAsync('serverInfo.version', { val: output.version, ack: true });
-		} catch (error) {
-			this.log.error(error);
-		}
-
-
 		// Initialize your adapter here
 		// Reset the connection indicator during startup
 		this.setState('info.connection', false, true);
+		if (this.config.interval < 1) {
+			this.log.info('Set interval to minimum 1');
+			this.config.interval = 1;
+		}
+
+		if (!this.config.serverIp) {
+			this.log.error('Please set server in the instance settings');
+			return;
+		}
+
+		this.updateInterval = null;
+		this.statusCode = null;
+		this.printers = [];
+
+		await this.connect();
+
+		if (this.statusCode === 'successful-ok') {
+			/*await this.getPrintersList();
+			await this.updatePrinters();
+			this.updateInterval = setInterval(async () => {
+				await this.updateDevices();
+			}, this.config.interval * 60 * 1000);
+			*/
+		}
 
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
 		// this.config:
 		this.log.info('config server: ' + this.config.serverIp);
 		this.log.info('config port: ' + this.config.port);
 		this.log.info('config interval: ' + this.config.interval);
+
+		//this.log.info(this.statusCode);
 
 		/*
 		For every state in the system there has to be also an object of type state
@@ -118,12 +113,59 @@ class Cups extends utils.Adapter {
 		//await this.setStateAsync('testVariable', { val: true, ack: true, expire: 30 });
 
 		// examples for the checkPassword/checkGroup functions
-		let result = await this.checkPasswordAsync('admin', 'iobroker');
-		this.log.info('check user admin pw iobroker: ' + result);
+		//let result = await this.checkPasswordAsync('admin', 'iobroker');
+		//this.log.info('check user admin pw iobroker: ' + result);
 
-		result = await this.checkGroupAsync('admin', 'admin');
-		this.log.info('check group user admin group admin: ' + result);
+		//result = await this.checkGroupAsync('admin', 'admin');
+		//this.log.info('check group user admin group admin: ' + result);
 	}
+
+	async connect() {
+		return new Promise((resolve, reject) => {
+			const localThis = this;
+			ipp.request(
+				'http://' + this.config.serverIp + ':' + this.config.port + '/',
+				ipp.serialize({
+					operation: 'CUPS-Get-Printers',
+					'operation-attributes-tag': {
+						'attributes-charset': 'utf-8',
+						'attributes-natural-language': 'en',
+						'requested-attributes': ['printer-make-and-model']
+					}
+				}),
+				function(err, res) {
+					if (err) {
+						localThis.log.error(err);
+						if (err.response) {
+							localThis.log.error(JSON.stringify(err.response.data, null, 2));
+							reject(err.response);
+						}
+					} else {
+						localThis.log.debug(JSON.stringify(res));
+						if (res.statusCode) {
+							localThis.statusCode = res.statusCode;
+							localThis.setState('info.connection', true, true);
+							localThis.setState('serverInfo.statusCode', res.statusCode, true);
+							if (res.statusCode === 'client-error-not-found') {
+								localThis.log.info('No destinations added.');
+							}
+							resolve(null);
+							return;
+						}
+						localThis.log.error(JSON.stringify(res.data));
+					}
+				}
+			);
+		});
+	}
+
+	/*
+
+		this.printers?.forEach((item) => {
+
+		});
+
+	*/
 
 	/**
 	 * Is called when adapter shuts down - callback has to be called under any circumstances!
@@ -131,6 +173,7 @@ class Cups extends utils.Adapter {
 	 */
 	onUnload(callback) {
 		try {
+			this.setState('info.connection', false, true);
 			// Here you must clear all timeouts or intervals that may still be active
 			// clearTimeout(timeout1);
 			// clearTimeout(timeout2);
