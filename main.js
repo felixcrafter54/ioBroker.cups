@@ -60,11 +60,11 @@ class Cups extends utils.Adapter {
 		if (this.statusCode === 'successful-ok') {
 			await this.getPrintersList();
 			await this.addPrinters();
-			/*await this.updatePrinters();
+			await this.updatePrinters();
 			this.updateInterval = setInterval(async () => {
-				await this.updateDevices();
+				await this.updatePrinters();
 			}, this.config.interval * 1000);
-			*/
+
 		}
 
 		//this.log.info(this.printers);
@@ -284,6 +284,44 @@ class Cups extends utils.Adapter {
 	}
 
 
+	updatePrinters() {
+		this.printers?.forEach((printer) => {
+			const localThis = this;
+			ipp.request(
+				'http://' + this.config.serverIp + ':' + this.config.port + '/printers/' + printer,
+				ipp.serialize({
+					operation: 'Get-Printer-Attributes',
+					'operation-attributes-tag': {
+						'attributes-charset': 'utf-8',
+						'attributes-natural-language': 'en',
+						'printer-uri': 'http://' + this.config.serverIp + ':' + this.config.port + '/printers/' + printer,
+						'requested-attributes': this.printer_addributes
+					}
+				}),
+				function(err, res) {
+					if (err) {
+						localThis.log.error(err);
+						if (err.response) {
+							localThis.log.error(JSON.stringify(err.response.data, null, 2));
+						}
+					} else {
+						localThis.log.debug(JSON.stringify(res));
+						if (res.statusCode) {
+
+							localThis.printer_addributes?.forEach((item) => {
+								localThis.setState(printer + '.' + item, res['printer-attributes-tag'][item], true);
+							});
+
+							return;
+						}
+						localThis.log.error(JSON.stringify(res.data));
+					}
+				}
+			);
+
+		});
+	}
+
 	/*
 
 		this.printers?.forEach((item) => {
@@ -304,6 +342,8 @@ class Cups extends utils.Adapter {
 			// clearTimeout(timeout2);
 			// ...
 			// clearInterval(interval1);
+
+			this.updateInterval && clearInterval(this.updateInterval);
 
 			callback();
 		} catch (e) {
