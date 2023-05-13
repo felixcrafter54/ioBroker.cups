@@ -53,25 +53,31 @@ class Cups extends utils.Adapter {
 		this.updateInterval = null;
 		this.statusCode = null;
 		this.printers = [];
+		this.printer_addributes = ['printer-state','printer-state-message','printer-state-reasons','queued-job-count'];
 
 		await this.connect();
 
 		if (this.statusCode === 'successful-ok') {
-			/*await this.getPrintersList();
-			await this.updatePrinters();
+			await this.getPrintersList();
+			await this.addPrinters();
+			/*await this.updatePrinters();
 			this.updateInterval = setInterval(async () => {
 				await this.updateDevices();
-			}, this.config.interval * 60 * 1000);
+			}, this.config.interval * 1000);
 			*/
 		}
 
+		//this.log.info(this.printers);
+
+		this.greet(this.printers);
+
 		// The adapters config (in the instance object everything under the attribute "native") is accessible via
 		// this.config:
-		this.log.info('config server: ' + this.config.serverIp);
-		this.log.info('config port: ' + this.config.port);
-		this.log.info('config interval: ' + this.config.interval);
+		this.log.debug('config server: ' + this.config.serverIp);
+		this.log.debug('config port: ' + this.config.port);
+		this.log.debug('config interval: ' + this.config.interval);
 
-		//this.log.info(this.statusCode);
+
 
 		/*
 		For every state in the system there has to be also an object of type state
@@ -89,6 +95,7 @@ class Cups extends utils.Adapter {
 			},
 			native: {},
 		});
+
 
 		// In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
 		this.subscribeStates('testVariable');
@@ -123,13 +130,13 @@ class Cups extends utils.Adapter {
 		return new Promise((resolve, reject) => {
 			const localThis = this;
 			ipp.request(
-				'http://' + this.config.serverIp + ':' + this.config.port + '/',
+				'ipp://' + this.config.serverIp + ':' + this.config.port + '/',
 				ipp.serialize({
 					operation: 'CUPS-Get-Printers',
 					'operation-attributes-tag': {
 						'attributes-charset': 'utf-8',
 						'attributes-natural-language': 'en',
-						'requested-attributes': ['printer-make-and-model']
+						'requested-attributes': ['']
 					}
 				}),
 				function(err, res) {
@@ -145,8 +152,10 @@ class Cups extends utils.Adapter {
 							localThis.statusCode = res.statusCode;
 							localThis.setState('info.connection', true, true);
 							localThis.setState('serverInfo.statusCode', res.statusCode, true);
-							if (res.statusCode === 'client-error-not-found') {
-								localThis.log.info('No destinations added.');
+							localThis.setState('serverInfo.version', res.version, true);
+							if (res['operation-attributes-tag'] && res['operation-attributes-tag']['status-message']) {
+								const statusMessage = res['operation-attributes-tag']['status-message'];
+								localThis.log.error(statusMessage);
 							}
 							resolve(null);
 							return;
@@ -157,6 +166,123 @@ class Cups extends utils.Adapter {
 			);
 		});
 	}
+
+	async getPrintersList() {
+		return new Promise((resolve, reject) => {
+			const localThis = this;
+			ipp.request(
+				'http://' + this.config.serverIp + ':' + this.config.port + '/',
+				ipp.serialize({
+					operation: 'CUPS-Get-Printers',
+					'operation-attributes-tag': {
+						'attributes-charset': 'utf-8',
+						'attributes-natural-language': 'en',
+						'requested-attributes': ['printer-name']
+					}
+				}),
+				function(err, res) {
+					if (err) {
+						localThis.log.error(err);
+						if (err.response) {
+							localThis.log.error(JSON.stringify(err.response.data, null, 2));
+							reject(err.response);
+						}
+					} else {
+						localThis.log.debug(JSON.stringify(res));
+						if (res.statusCode) {
+							if (Array.isArray(res['printer-attributes-tag'])) {
+								res['printer-attributes-tag'].forEach((printer) => {
+									// @ts-ignore
+									localThis.printers.push(printer['printer-name']);
+								});
+							} else {
+								// @ts-ignore
+								localThis.printers.push(res['printer-attributes-tag']['printer-name']);
+							}
+							resolve(null);
+							return;
+						}
+						localThis.log.error(JSON.stringify(res.data));
+					}
+				}
+			);
+		});
+
+	}
+
+	greet(names) {
+		for (const name of names) {
+			this.log.info(name);
+		}
+	}
+
+	addPrinters() {
+		this.printers?.forEach((printer) => {
+			//this.createDevice(printer);
+
+			//Printers
+			this.setObjectNotExistsAsync(printer, {
+				type: 'device',
+				common: {
+					name: printer
+				},
+				native: {},
+			});
+
+			//printer-state
+			this.setObjectNotExistsAsync(printer + '.printer-state', {
+				type: 'state',
+				common: {
+					name: 'Printer Status',
+					type: 'string',
+					role: 'info',
+					read: true,
+					write: false,
+				},
+				native: {},
+			});
+
+			//printer-state-message
+			this.setObjectNotExistsAsync(printer + '.printer-state-message', {
+				type: 'state',
+				common: {
+					name: 'Printer Status Message',
+					type: 'string',
+					role: 'info',
+					read: true,
+					write: false,
+				},
+				native: {},
+			});
+
+			//printer-state-reasons
+			this.setObjectNotExistsAsync(printer + '.printer-state-reasons', {
+				type: 'state',
+				common: {
+					name: 'Printer Status',
+					type: 'string',
+					role: 'info',
+					read: true,
+					write: false,
+				},
+				native: {},
+			});
+
+			//queued-job-count
+			this.setObjectNotExistsAsync(printer + '.queued-job-count', {
+				type: 'state',
+				common: {
+					name: 'Printer Job Count',
+					type: 'number',
+					role: 'value',
+					read: true,
+					write: false,
+				},
+				native: {},
+			});
+		});
+	}
+
 
 	/*
 
