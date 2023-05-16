@@ -127,6 +127,7 @@ class Cups extends utils.Adapter {
 	}
 
 	async connect() {
+		this.log.debug('connect');
 		return new Promise((resolve, reject) => {
 			const localThis = this;
 			ipp.request(
@@ -168,6 +169,7 @@ class Cups extends utils.Adapter {
 	}
 
 	async getPrintersList() {
+		this.log.debug('getPrintersList');
 		return new Promise((resolve, reject) => {
 			const localThis = this;
 			ipp.request(
@@ -216,75 +218,81 @@ class Cups extends utils.Adapter {
 		}
 	}
 
-	addPrinters() {
-		this.printers?.forEach((printer) => {
-			//this.createDevice(printer);
+	async addPrinters() {
+		this.log.debug('addPrinters');
+		if (this.printers != null) {
+			for (const printer of this.printers) {
+				//this.createDevice(printer);
 
-			//Printers
-			this.setObjectNotExistsAsync(printer, {
-				type: 'device',
-				common: {
-					name: printer
-				},
-				native: {},
-			});
+				//Printers
+				const device = this.setObjectNotExistsAsync(printer, {
+					type: 'device',
+					common: {
+						name: printer
+					},
+					native: {},
+				});
 
-			//printer-state
-			this.setObjectNotExistsAsync(printer + '.printer-state', {
-				type: 'state',
-				common: {
-					name: 'Printer Status',
-					type: 'string',
-					role: 'info',
-					read: true,
-					write: false,
-				},
-				native: {},
-			});
+				//printer-state
+				const printerState = this.setObjectNotExistsAsync(printer + '.printer-state', {
+					type: 'state',
+					common: {
+						name: 'Printer Status',
+						type: 'string',
+						role: 'info',
+						read: true,
+						write: false,
+					},
+					native: {},
+				});
 
-			//printer-state-message
-			this.setObjectNotExistsAsync(printer + '.printer-state-message', {
-				type: 'state',
-				common: {
-					name: 'Printer Status Message',
-					type: 'string',
-					role: 'info',
-					read: true,
-					write: false,
-				},
-				native: {},
-			});
+				//printer-state-message
+				const printerStateMessage = this.setObjectNotExistsAsync(printer + '.printer-state-message', {
+					type: 'state',
+					common: {
+						name: 'Printer Status Message',
+						type: 'string',
+						role: 'info',
+						read: true,
+						write: false,
+					},
+					native: {},
+				});
 
-			//printer-state-reasons
-			this.setObjectNotExistsAsync(printer + '.printer-state-reasons', {
-				type: 'state',
-				common: {
-					name: 'Printer Status',
-					type: 'string',
-					role: 'info',
-					read: true,
-					write: false,
-				},
-				native: {},
-			});
+				//printer-state-reasons
+				const printerStateReason = this.setObjectNotExistsAsync(printer + '.printer-state-reasons', {
+					type: 'state',
+					common: {
+						name: 'Printer Status',
+						type: 'string',
+						role: 'info',
+						read: true,
+						write: false,
+					},
+					native: {},
+				});
 
-			//queued-job-count
-			this.setObjectNotExistsAsync(printer + '.queued-job-count', {
-				type: 'state',
-				common: {
-					name: 'Printer Job Count',
-					type: 'number',
-					role: 'value',
-					read: true,
-					write: false,
-				},
-				native: {},
-			});
-		});
+				//queued-job-count
+				const queuedJobCount = this.setObjectNotExistsAsync(printer + '.queued-job-count', {
+					type: 'state',
+					common: {
+						name: 'Printer Job Count',
+						type: 'number',
+						role: 'value',
+						read: true,
+						write: false,
+					},
+					native: {},
+				});
+				Promise.all([device, printerState, printerStateMessage, printerStateReason, queuedJobCount]);
+			}
+		}
+		this.log.debug('finished addPrinters');
 	}
 
 
 	updatePrinters() {
+		this.log.debug('updatePrinters');
 		this.printers?.forEach((printer) => {
 			const localThis = this;
 			ipp.request(
