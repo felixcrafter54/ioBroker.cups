@@ -227,7 +227,7 @@ class Cups extends utils.Adapter {
 				//this.createDevice(printer);
 				const printer = this.printers[printerIndex];
 				//Printers
-				const device = this.setObjectNotExistsAsync(printer, {
+				await this.setObjectNotExistsAsync(printer, {
 					type: 'device',
 					common: {
 						name: printer
@@ -236,7 +236,7 @@ class Cups extends utils.Adapter {
 				});
 
 				//printer-state
-				const printerState = this.setObjectNotExistsAsync(printer + '.printer-state', {
+				await this.setObjectNotExistsAsync(printer + '.printer-state', {
 					type: 'state',
 					common: {
 						name: 'Printer Status',
@@ -249,7 +249,7 @@ class Cups extends utils.Adapter {
 				});
 
 				//printer-state-message
-				const printerStateMessage = this.setObjectNotExistsAsync(printer + '.printer-state-message', {
+				await this.setObjectNotExistsAsync(printer + '.printer-state-message', {
 					type: 'state',
 					common: {
 						name: 'Printer Status Message',
@@ -262,7 +262,7 @@ class Cups extends utils.Adapter {
 				});
 
 				//printer-state-reasons
-				const printerStateReason = this.setObjectNotExistsAsync(printer + '.printer-state-reasons', {
+				await this.setObjectNotExistsAsync(printer + '.printer-state-reasons', {
 					type: 'state',
 					common: {
 						name: 'Printer Status',
@@ -275,7 +275,7 @@ class Cups extends utils.Adapter {
 				});
 
 				//queued-job-count
-				const queuedJobCount = this.setObjectNotExistsAsync(printer + '.queued-job-count', {
+				await this.setObjectNotExistsAsync(printer + '.queued-job-count', {
 					type: 'state',
 					common: {
 						name: 'Printer Job Count',
@@ -286,7 +286,6 @@ class Cups extends utils.Adapter {
 					},
 					native: {},
 				});
-				Promise.all([device, printerState, printerStateMessage, printerStateReason, queuedJobCount]);
 			}
 		}
 		this.log.debug('finished addPrinters');
